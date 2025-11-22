@@ -2,11 +2,11 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>Global Heartbeat AI – Planetarny puls ludzkości</title>
+  <title>Global Heartbeat AI – Planetarny puls ludzkości (DEMO)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
     name="description"
-    content="Global Heartbeat AI – interaktywny globus 3D wizualizujący jednominutowy puls ludzkości z warstwą AI analizującą ryzyko środowiskowe i społeczne."
+    content="Global Heartbeat AI – demo globusa 3D z kolorowymi klastrami zdarzeń i filtrowaniem po typach ryzyka."
   />
   <style>
     :root {
@@ -61,7 +61,7 @@
       overflow: hidden;
       box-shadow: var(--shadow-soft);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      background: radial-gradient(circle at top, #1a2148, #050713 65%);
+      background: radial-gradient(circle at top, #111741, #050713 65%);
     }
 
     #tooltip {
@@ -167,8 +167,8 @@
     #controls-card label {
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-bottom: 3px;
+      gap: 6px;
+      margin-bottom: 4px;
       cursor: pointer;
     }
 
@@ -189,6 +189,37 @@
       padding-top: 6px;
       border-top: 1px dashed rgba(120, 130, 190, 0.6);
     }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(10, 14, 40, 0.9);
+      border: 1px solid rgba(150, 170, 255, 0.5);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .legend-normal { background:#00ffd5; }
+    .legend-heat { background:#ff5500; }
+    .legend-flood { background:#00a2ff; }
+    .legend-conflict { background:#ff006a; }
+    .legend-infra { background:#ffd400; }
 
     /* Metrics */
     #metrics-grid {
@@ -313,36 +344,46 @@
     <section id="header-card" class="panel-card">
       <div class="brand-label">
         <span class="brand-dot"></span>
-        GLOBAL HEARTBEAT AI
+        GLOBAL HEARTBEAT AI – DEMO
       </div>
       <h1>Planetarny puls ludzkości</h1>
       <p class="subtitle">
-        Interaktywny globus 3D łączący dane o rytmie serca z warstwą AI szacującą lokalne ryzyko środowiskowe i społeczne.
+        Kolorowe klastry zdarzeń na globusie 3D. Każdy typ ryzyka ma swój własny kolor i region.
       </p>
       <div class="tag-row">
-        <span class="tag">Biometrics</span>
-        <span class="tag">Earth data</span>
-        <span class="tag">AI risk mapping</span>
+        <span class="tag">DEMO</span>
+        <span class="tag">3D Globe</span>
+        <span class="tag">AI Events</span>
       </div>
     </section>
 
     <section id="controls-card" class="panel-card">
       <h2>Filtry zdarzeń / ryzyka</h2>
       <div>
-        <label><input type="checkbox" data-event="normal" checked /> normal</label>
-        <label><input type="checkbox" data-event="heatwave_risk" checked /> heatwave_risk</label>
-        <label><input type="checkbox" data-event="flood_risk" checked /> flood_risk</label>
-        <label><input type="checkbox" data-event="conflict_risk" checked /> conflict_risk</label>
-        <label><input type="checkbox" data-event="infrastructure_stress" checked /> infrastructure_stress</label>
+        <label><input type="checkbox" data-event="normal" checked /> normal (turkus)</label>
+        <label><input type="checkbox" data-event="heatwave_risk" checked /> heatwave_risk (pomarańczowy)</label>
+        <label><input type="checkbox" data-event="flood_risk" checked /> flood_risk (niebieski)</label>
+        <label><input type="checkbox" data-event="conflict_risk" checked /> conflict_risk (róż/fuksja)</label>
+        <label><input type="checkbox" data-event="infrastructure_stress" checked /> infrastructure_stress (żółty)</label>
       </div>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot legend-normal"></span>normal</div>
+        <div class="legend-item"><span class="legend-dot legend-heat"></span>heatwave</div>
+        <div class="legend-item"><span class="legend-dot legend-flood"></span>flood</div>
+        <div class="legend-item"><span class="legend-dot legend-conflict"></span>conflict</div>
+        <div class="legend-item"><span class="legend-dot legend-infra"></span>infra</div>
+      </div>
+
       <div class="controls-row">
         Min. risk_index:
         <span id="risk-value">0.00</span><br />
         <input id="risk-slider" type="range" min="0" max="100" value="0" />
         <p style="margin:4px 0 0; color:var(--text-soft); font-size:10px;">
-          Przesuń w prawo, aby zobaczyć tylko najbardziej obciążone punkty.
+          Przesuń w prawo, aby zostawić tylko najmocniejsze punkty (największe i najbardziej świecące).
         </p>
       </div>
+
       <div class="controls-row" style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:10px;color:var(--text-soft);">
           Źródło danych:
@@ -377,51 +418,28 @@
     </section>
 
     <section id="about-card" class="panel-card">
-      <h2>O projekcie / naukowe tło</h2>
+      <h2>O projekcie / układ klastrów</h2>
       <div id="about-scroll">
         <div class="about-block">
-          <h3>Co oglądasz?</h3>
+          <h3>Cel tej wersji DEMO</h3>
           <p>
-            Każdy punkt na globusie reprezentuje lokalny fragment pulsu ludzkości:
-            zanonimizowaną grupę osób z określonym tętnem (<b>HR</b>), zmiennością rytmu serca (<b>HRV</b>)
-            i lokalnym czasem. Kolor punktu to etykieta AI (<code>event_type</code>), a rozmiar – indeks ryzyka
-            (<code>risk_index</code>).
+            Ta wersja demonstruje samą logikę wizualizacji: każdy typ zdarzenia ma własny <b>mocny kolor</b>
+            oraz <b>odrębny region</b> na globusie, żeby łatwo było zauważyć działanie filtrów.
           </p>
         </div>
 
         <div class="about-block">
-          <h3>Warstwa AI (simplified)</h3>
-          <p>
-            Warstwa AI łączy informacje fizjologiczne (HR, HRV, faza doby) z danymi środowiskowymi i kryzysowymi.
-            Dla każdego punktu obliczany jest:
-          </p>
+          <h3>Rozmieszczenie klastrów</h3>
           <ul class="about-list">
-            <li><code>risk_index</code> – liczba 0–1 opisująca obciążenie / ryzyko,</li>
-            <li><code>event_type</code> – klasa zdarzenia: <em>normal, heatwave_risk, flood_risk, conflict_risk, infrastructure_stress</em>.</li>
-          </ul>
-        </div>
-
-        <div class="about-block">
-          <h3>Architektura systemu</h3>
-          <p>System Global Heartbeat AI obejmuje:</p>
-          <ul class="about-list">
-            <li><b>Warstwę danych</b> – strumienie HR/HRV + dane środowiskowe,</li>
-            <li><b>Silnik analityczny</b> – agregacja do jednominutowych snapshotów i wyliczanie metryk,</li>
-            <li><b>Moduł AI</b> – szacowanie ryzyka i tagowanie zdarzeń,</li>
-            <li><b>Globus 3D</b> – wizualizację w czasie zbliżonym do rzeczywistego.</li>
+            <li><b>normal (turkus)</b> – rozproszone globalnie, mniejsze punkty tła,</li>
+            <li><b>heatwave_risk (pomarańczowy)</b> – pas gorący (Afryka / Indie / Bliski Wschód),</li>
+            <li><b>flood_risk (niebieski)</b> – strefa równikowa oceaniczna,</li>
+            <li><b>conflict_risk (róż/fuksja)</b> – regiony lądowe na półkuli północnej,</li>
+            <li><b>infrastructure_stress (żółty)</b> – obszary wysoko zurbanizowane (ok. 40–60°N).</li>
           </ul>
           <p style="margin-top:4px;">
-            Ten widok prezentuje pojedynczy snapshot; w wersji rozszerzonej globus może być animowany w czasie
-            i połączony z panelami analitycznymi (wykresy, porównania regionów, historia zdarzeń).
-          </p>
-        </div>
-
-        <div class="about-block">
-          <h3>Uwaga o danych</h3>
-          <p>
-            Dane w tym widoku są syntetyczne (tryb demonstracyjny), ale struktura jest zgodna z docelowym systemem.
-            Po podłączeniu backendu / API, globus może pracować na prawdziwych strumieniach HR/HRV z urządzeń
-            noszonych oraz na rzeczywistych danych pogodowych i kryzysowych.
+            Odznaczaj checkboxy, żeby zobaczyć, które kolory/regiony znikają z globusa. Suwak
+            <code>risk_index</code> zostawia tylko najmocniej obciążone punkty (większe i jaśniejsze).
           </p>
         </div>
       </div>
@@ -460,12 +478,13 @@
 
       const radius = 1.2;
 
+      // MOCNE kolory – ekstremalnie kontrastowe
       const colorMap = {
-        normal: new THREE.Color(0x7fd2ff),
-        heatwave_risk: new THREE.Color(0xffa34f),
-        flood_risk: new THREE.Color(0x5b9dff),
-        conflict_risk: new THREE.Color(0xff5fb3),
-        infrastructure_stress: new THREE.Color(0xffd469),
+        normal: new THREE.Color(0x00ffd5),            // turkus
+        heatwave_risk: new THREE.Color(0xff5500),     // pomarańcz
+        flood_risk: new THREE.Color(0x008cff),        // niebieski
+        conflict_risk: new THREE.Color(0xff008a),     // róż/fuksja
+        infrastructure_stress: new THREE.Color(0xffd400), // żółty
       };
 
       function initScene() {
@@ -483,18 +502,18 @@
         renderer.setSize(width, height);
         container.appendChild(renderer.domElement);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.75);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambient);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
         dirLight.position.set(3, 2, 3);
         scene.add(dirLight);
 
         const globeGeo = new THREE.SphereGeometry(radius, 64, 64);
         const globeMat = new THREE.MeshPhongMaterial({
-          color: 0x3246a0,
+          color: 0x24348f,
           emissive: 0x050713,
-          shininess: 32,
+          shininess: 40,
           transparent: true,
           opacity: 0.96,
         });
@@ -503,19 +522,19 @@
 
         const wireGeo = new THREE.SphereGeometry(radius * 1.003, 32, 32);
         const wireMat = new THREE.MeshBasicMaterial({
-          color: 0x5569c8,
+          color: 0x5c6ff0,
           wireframe: true,
           transparent: true,
-          opacity: 0.34,
+          opacity: 0.36,
         });
         wireMesh = new THREE.Mesh(wireGeo, wireMat);
         scene.add(wireMesh);
 
         const atmoGeo = new THREE.SphereGeometry(radius * 1.06, 40, 40);
         const atmoMat = new THREE.MeshBasicMaterial({
-          color: 0x88c2ff,
+          color: 0x86c7ff,
           transparent: true,
-          opacity: 0.2,
+          opacity: 0.22,
         });
         atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
         scene.add(atmosphereMesh);
@@ -606,21 +625,21 @@
           visible.push(p);
 
           const pos = latLonToVector3(p.lat, p.lon);
-          const size = 0.012 + 0.04 * p.risk_index;
+          const baseSize = 0.02 + 0.05 * p.risk_index;
 
-          const geom = new THREE.SphereGeometry(size, 14, 14);
+          const geom = new THREE.SphereGeometry(baseSize, 18, 18);
           const baseColor = colorMap[p.event_type] || colorMap.normal;
           const mat = new THREE.MeshPhongMaterial({
             color: baseColor,
-            emissive: baseColor.clone().multiplyScalar(0.9),
-            shininess: 70,
+            emissive: baseColor.clone().multiplyScalar(1.0),
+            shininess: 90,
           });
 
           const mesh = new THREE.Mesh(geom, mat);
           mesh.position.copy(pos);
           mesh.userData = {
             ...p,
-            baseSize: size,
+            baseSize: baseSize,
           };
           pointsGroup.add(mesh);
         });
@@ -692,7 +711,7 @@
         requestAnimationFrame(animate);
 
         // Auto–obrót
-        targetRot.y += 0.0009;
+        targetRot.y += 0.001;
 
         currentRot.x += (targetRot.x - currentRot.x) * 0.12;
         currentRot.y += (targetRot.y - currentRot.y) * 0.12;
@@ -703,15 +722,14 @@
           obj.rotation.y = currentRot.y;
         });
 
-        // Pulsowanie punktów
         const t = performance.now() / 1000;
         pointsGroup.children.forEach((mesh) => {
           const d = mesh.userData;
           if (!d || typeof d.baseSize !== "number") return;
           const r = d.risk_index || 0;
-          const amp = 0.4 * r + 0.1;
-          const s = 1 + amp * Math.sin(t * 1.8 + r * 7.0);
-          const scale = Math.max(0.5, s);
+          const amp = 0.35 * r + 0.15;
+          const s = 1 + amp * Math.sin(t * 2.2 + r * 6.0);
+          const scale = Math.max(0.7, s);
           mesh.scale.setScalar(scale);
         });
 
@@ -758,48 +776,118 @@
           " · I:" + counts.infrastructure_stress;
       }
 
-      // --- DEMO DATA ONLY (bez API) ---
+      // --- DEMO DATA: wyraźne, kolorowe klastry ---
       function loadDemoDataOnly() {
         dataModeLabel.textContent = "DEMO / offline";
         snapshotTimeLabel.textContent = "(syntetyczny jednominutowy snapshot)";
-        globeData = generateDemoData(2000);
+        globeData = generateClusteredDemoData();
         buildPoints();
       }
 
-      function generateDemoData(n) {
+      function generateClusteredDemoData() {
         const out = [];
-        for (let i = 0; i < n; i++) {
-          const lat = (Math.random() * 140) - 70;
+        const now = new Date().toISOString();
+
+        // normal – rozproszone, mniejsze punkty, turkus
+        for (let i = 0; i < 400; i++) {
+          const lat = (Math.random() * 160) - 80;
           const lon = (Math.random() * 360) - 180;
           const localHour = (12 + lon / 15 + 24) % 24;
-          const baselineHR = 70 - 10 * Math.cos((localHour - 11) * 2 * Math.PI / 24);
-          const HR = clamp(baselineHR + randn() * 6, 45, 120);
-          const baselineHRV = 60 + 20 * Math.cos((localHour - 3) * 2 * Math.PI / 24);
-          const HRV = clamp(baselineHRV + randn() * 10, 10, 140);
-          const normHR = (HR - 45) / (120 - 45);
-          const normHRV = (HRV - 10) / (140 - 10);
-          let risk = normHR - normHRV + randn() * 0.08;
-          risk = (risk - (-1)) / (1 - (-1));
-          risk = clamp(risk, 0, 1);
-
-          let eventType = "normal";
-          if (risk > 0.78 && lat > 20) eventType = "heatwave_risk";
-          if (risk > 0.7 && lat < 25 && lat > -5 && lon < -20) eventType = "flood_risk";
-          if (risk > 0.7 && lat > 30 && lon > -10 && lon < 50) eventType = "conflict_risk";
-          if (risk > 0.7 && lat > 35 && lon < -30) eventType = "infrastructure_stress";
-
+          const HR = clamp(65 + randn() * 6, 45, 110);
+          const HRV = clamp(70 + randn() * 10, 20, 140);
+          const risk = clamp(0.1 + Math.random() * 0.3, 0, 1);
           out.push({
             lat,
             lon,
-            timestamp_utc: new Date().toISOString(),
+            timestamp_utc: now,
             local_hour: localHour,
-            theta: localHour * 2 * Math.PI / 24,
             HR,
             HRV,
             risk_index: risk,
-            event_type: eventType,
+            event_type: "normal",
           });
         }
+
+        // heatwave_risk – szerokości 10–35N, Afryka / Indie / Bliski Wschód
+        for (let i = 0; i < 120; i++) {
+          const lat = 10 + Math.random() * 25;
+          const lon = -20 + Math.random() * 100; // Afryka–Bliski Wschód
+          const localHour = (12 + lon / 15 + 24) % 24;
+          const HR = clamp(80 + randn() * 8, 55, 130);
+          const HRV = clamp(50 + randn() * 10, 10, 110);
+          const risk = clamp(0.6 + Math.random() * 0.4, 0, 1);
+          out.push({
+            lat,
+            lon,
+            timestamp_utc: now,
+            local_hour: localHour,
+            HR,
+            HRV,
+            risk_index: risk,
+            event_type: "heatwave_risk",
+          });
+        }
+
+        // flood_risk – pas równikowy oceany / wybrzeża
+        for (let i = 0; i < 120; i++) {
+          const lat = -10 + Math.random() * 20;
+          const lon = -160 + Math.random() * 320;
+          const localHour = (12 + lon / 15 + 24) % 24;
+          const HR = clamp(72 + randn() * 7, 50, 120);
+          const HRV = clamp(65 + randn() * 12, 15, 130);
+          const risk = clamp(0.55 + Math.random() * 0.45, 0, 1);
+          out.push({
+            lat,
+            lon,
+            timestamp_utc: now,
+            local_hour: localHour,
+            HR,
+            HRV,
+            risk_index: risk,
+            event_type: "flood_risk",
+          });
+        }
+
+        // conflict_risk – lądowa półkula północna (30–60N, -20 do 120E)
+        for (let i = 0; i < 120; i++) {
+          const lat = 30 + Math.random() * 30;
+          const lon = -20 + Math.random() * 140;
+          const localHour = (12 + lon / 15 + 24) % 24;
+          const HR = clamp(78 + randn() * 9, 55, 135);
+          const HRV = clamp(55 + randn() * 12, 10, 120);
+          const risk = clamp(0.6 + Math.random() * 0.4, 0, 1);
+          out.push({
+            lat,
+            lon,
+            timestamp_utc: now,
+            local_hour: localHour,
+            HR,
+            HRV,
+            risk_index: risk,
+            event_type: "conflict_risk",
+          });
+        }
+
+        // infrastructure_stress – 40–60N, obszary typu Europa / USA / Azja
+        for (let i = 0; i < 120; i++) {
+          const lat = 40 + Math.random() * 20;
+          const lon = -130 + Math.random() * 260;
+          const localHour = (12 + lon / 15 + 24) % 24;
+          const HR = clamp(75 + randn() * 7, 50, 125);
+          const HRV = clamp(60 + randn() * 10, 20, 130);
+          const risk = clamp(0.55 + Math.random() * 0.45, 0, 1);
+          out.push({
+            lat,
+            lon,
+            timestamp_utc: now,
+            local_hour: localHour,
+            HR,
+            HRV,
+            risk_index: risk,
+            event_type: "infrastructure_stress",
+          });
+        }
+
         return out;
       }
 
