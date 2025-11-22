@@ -217,8 +217,8 @@
 
     .legend-normal { background:#00ffd5; }
     .legend-heat { background:#ff5500; }
-    .legend-flood { background:#00a2ff; }
-    .legend-conflict { background:#ff006a; }
+    .legend-flood { background:#008cff; }
+    .legend-conflict { background:#ff008a; }
     .legend-infra { background:#ffd400; }
 
     /* Metrics */
@@ -502,10 +502,10 @@
         renderer.setSize(width, height);
         container.appendChild(renderer.domElement);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambient);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.position.set(3, 2, 3);
         scene.add(dirLight);
 
@@ -629,10 +629,10 @@
 
           const geom = new THREE.SphereGeometry(baseSize, 18, 18);
           const baseColor = colorMap[p.event_type] || colorMap.normal;
-          const mat = new THREE.MeshPhongMaterial({
+
+          // KLUCZOWA ZMIANA: MeshBasicMaterial (bez świateł)
+          const mat = new THREE.MeshBasicMaterial({
             color: baseColor,
-            emissive: baseColor.clone().multiplyScalar(1.0),
-            shininess: 90,
           });
 
           const mesh = new THREE.Mesh(geom, mat);
@@ -788,7 +788,7 @@
         const out = [];
         const now = new Date().toISOString();
 
-        // normal – rozproszone, mniejsze punkty, turkus
+        // normal – rozproszone
         for (let i = 0; i < 400; i++) {
           const lat = (Math.random() * 160) - 80;
           const lon = (Math.random() * 360) - 180;
@@ -808,10 +808,10 @@
           });
         }
 
-        // heatwave_risk – szerokości 10–35N, Afryka / Indie / Bliski Wschód
+        // heatwave_risk – 10–35N, Afryka / Bliski Wschód
         for (let i = 0; i < 120; i++) {
           const lat = 10 + Math.random() * 25;
-          const lon = -20 + Math.random() * 100; // Afryka–Bliski Wschód
+          const lon = -20 + Math.random() * 100;
           const localHour = (12 + lon / 15 + 24) % 24;
           const HR = clamp(80 + randn() * 8, 55, 130);
           const HRV = clamp(50 + randn() * 10, 10, 110);
@@ -828,7 +828,7 @@
           });
         }
 
-        // flood_risk – pas równikowy oceany / wybrzeża
+        // flood_risk – pas równikowy
         for (let i = 0; i < 120; i++) {
           const lat = -10 + Math.random() * 20;
           const lon = -160 + Math.random() * 320;
@@ -848,7 +848,7 @@
           });
         }
 
-        // conflict_risk – lądowa półkula północna (30–60N, -20 do 120E)
+        // conflict_risk – 30–60N, -20 do 120E
         for (let i = 0; i < 120; i++) {
           const lat = 30 + Math.random() * 30;
           const lon = -20 + Math.random() * 140;
@@ -868,7 +868,7 @@
           });
         }
 
-        // infrastructure_stress – 40–60N, obszary typu Europa / USA / Azja
+        // infrastructure_stress – 40–60N, -130 do 130
         for (let i = 0; i < 120; i++) {
           const lat = 40 + Math.random() * 20;
           const lon = -130 + Math.random() * 260;
