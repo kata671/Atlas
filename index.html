@@ -346,7 +346,7 @@
       <div class="controls-row" style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:10px;color:var(--text-soft);">
           Źródło danych:
-          <span id="data-mode-label" style="color:var(--accent-warm); font-weight:600;">API / live</span>
+          <span id="data-mode-label" style="color:var(--accent-warm); font-weight:600;">DEMO / offline</span>
         </span>
         <span style="font-size:10px;color:var(--text-soft);" id="snapshot-time"></span>
       </div>
@@ -419,7 +419,7 @@
         <div class="about-block">
           <h3>Uwaga o danych</h3>
           <p>
-            W trybie demonstracyjnym dane są syntetyczne, ale struktura jest zgodna z docelowym systemem.
+            Dane w tym widoku są syntetyczne (tryb demonstracyjny), ale struktura jest zgodna z docelowym systemem.
             Po podłączeniu backendu / API, globus może pracować na prawdziwych strumieniach HR/HRV z urządzeń
             noszonych oraz na rzeczywistych danych pogodowych i kryzysowych.
           </p>
@@ -433,9 +433,6 @@
     import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
 
     (function() {
-      const API_BASE = "http://localhost:8000";
-      const SNAPSHOT_ENDPOINT = API_BASE + "/globe/snapshot?n_points=2000";
-
       const container = document.getElementById("globe-container");
       const tooltip = document.getElementById("tooltip");
       const riskSlider = document.getElementById("risk-slider");
@@ -706,7 +703,7 @@
           obj.rotation.y = currentRot.y;
         });
 
-        // Pulsowanie punktów (oddech zależny od risk_index)
+        // Pulsowanie punktów
         const t = performance.now() / 1000;
         pointsGroup.children.forEach((mesh) => {
           const d = mesh.userData;
@@ -761,24 +758,12 @@
           " · I:" + counts.infrastructure_stress;
       }
 
-      async function loadDataFromApi() {
-        try {
-          const res = await fetch(SNAPSHOT_ENDPOINT);
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const json = await res.json();
-          globeData = json.points || [];
-          dataModeLabel.textContent = "API / live";
-          if (json.timestamp_utc) {
-            snapshotTimeLabel.textContent = new Date(json.timestamp_utc).toISOString();
-          }
-          buildPoints();
-        } catch (err) {
-          console.warn("API niedostępne, tryb DEMO:", err);
-          dataModeLabel.textContent = "DEMO / offline";
-          snapshotTimeLabel.textContent = "(syntetyczny snapshot)";
-          globeData = generateDemoData(2000);
-          buildPoints();
-        }
+      // --- DEMO DATA ONLY (bez API) ---
+      function loadDemoDataOnly() {
+        dataModeLabel.textContent = "DEMO / offline";
+        snapshotTimeLabel.textContent = "(syntetyczny jednominutowy snapshot)";
+        globeData = generateDemoData(2000);
+        buildPoints();
       }
 
       function generateDemoData(n) {
@@ -842,7 +827,7 @@
 
       initScene();
       initControls();
-      loadDataFromApi();
+      loadDemoDataOnly();
     })();
   </script>
 </body>
