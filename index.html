@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
     name="description"
-    content="Global Heartbeat AI – demo globusa 3D z kolorowymi klastrami zdarzeń, filtrowaniem ryzyka oraz opisem regionu i scenariusza."
+    content="Global Heartbeat AI – demo globusa 3D z kolorowymi klastrami zdarzeń, filtrowaniem ryzyka oraz opisem regionu, kraju i scenariusza."
   />
   <style>
     :root {
@@ -397,7 +397,7 @@
       </div>
       <h1>Planetarny puls ludzkości</h1>
       <p class="subtitle">
-        Kolorowe klastry zdarzeń na globusie 3D. Każdy punkt ma przypisany region i scenariusz AI (demo).
+        Kolorowe klastry zdarzeń na globusie 3D. Każdy punkt ma przypisany region, kraj (demo) i scenariusz AI.
       </p>
       <div class="tag-row">
         <span class="tag">DEMO</span>
@@ -466,17 +466,22 @@
       </div>
     </section>
 
-    <!-- NOWA KARTA: AKTUALNY PUNKT / REGION -->
+    <!-- KARTA: AKTUALNY PUNKT / REGION -->
     <section id="selection-card" class="panel-card">
       <h2>Aktualny punkt / region (AI lens)</h2>
       <div id="sel-empty" class="sel-note">
         Najedź kursorem na dowolny punkt na globusie, aby zobaczyć szczegółowy profil regionu:
-        lokalizacja, typ zdarzenia, faza doby, HR/HRV oraz interpretacja AI (demo).
+        lokalizacja, kraj (demo), typ zdarzenia, faza doby, HR/HRV oraz interpretacja AI.
       </div>
       <div id="sel-content" style="display:none;">
         <div class="sel-main">
           <span id="sel-region">—</span>
           <span id="sel-phase-pill" class="phase-pill">—</span>
+        </div>
+
+        <div class="sel-row">
+          <div class="sel-label">Kraj (demo)</div>
+          <div class="sel-value" id="sel-country">—</div>
         </div>
 
         <div class="sel-row">
@@ -513,8 +518,8 @@
           <h3>Cel tej wersji DEMO</h3>
           <p>
             Ta wersja pokazuje, jak mógłby wyglądać panel „oglądający” planetarny puls ludzkości:
-            każdy punkt ma przypisaną <b>lokalizację (region/kraj)</b> oraz <b>opis scenariusza</b>, który tłumaczy,
-            dlaczego AI (w trybie demonstracyjnym) oznaczyła go jako dany typ ryzyka.
+            każdy punkt ma przypisany <b>region</b>, <b>kraj (przybliżony, demo)</b> oraz
+            <b>opis scenariusza</b>, który tłumaczy, dlaczego AI oznaczyła go jako dany typ ryzyka.
           </p>
         </div>
 
@@ -561,6 +566,7 @@
       const selContent = document.getElementById("sel-content");
       const selRegion = document.getElementById("sel-region");
       const selPhasePill = document.getElementById("sel-phase-pill");
+      const selCountry = document.getElementById("sel-country");
       const selType = document.getElementById("sel-type");
       const selCoords = document.getElementById("sel-coords");
       const selLocalTime = document.getElementById("sel-local-time");
@@ -771,6 +777,10 @@
               html += "<b>" + d.region_label + "</b><br/>";
             }
 
+            if (d.country_label) {
+              html += "Kraj (demo): <b>" + d.country_label + "</b><br/>";
+            }
+
             html += "Typ: <b>" + d.event_type + "</b><br/>";
 
             html +=
@@ -927,6 +937,8 @@
         else if (phase === "night") selPhasePill.classList.add("phase-night");
         else selPhasePill.classList.add("phase-transition");
 
+        selCountry.textContent = d.country_label || "Ocean / obszar międzynarodowy (demo)";
+
         selType.textContent = d.event_type;
         selCoords.textContent = d.lat.toFixed(2) + "° / " + d.lon.toFixed(2) + "°";
         selLocalTime.textContent = d.local_hour.toFixed(1) + " h";
@@ -938,7 +950,49 @@
         selNote.textContent = d.reason || "Brak dodatkowego komentarza (demo).";
       }
 
-      // --- DEMO DATA: wyraźne, kolorowe klastry + region_label + reason ---
+      // --- Przybliżone mapowanie krajów (DEMO, bounding boxy) ---
+      function guessCountryFromLatLon(lat, lon) {
+        // Europa
+        if (lat >= 49 && lat <= 55 && lon >= 14 && lon <= 24) return "Polska (demo)";
+        if (lat >= 47 && lat <= 55 && lon >= 5 && lon <= 15) return "Niemcy (demo)";
+        if (lat >= 42 && lat <= 51 && lon >= -5 && lon <= 9) return "Francja (demo)";
+        if (lat >= 36 && lat <= 44 && lon >= -10 && lon <= 3) return "Hiszpania (demo)";
+        if (lat >= 37 && lat <= 47 && lon >= 6 && lon <= 19) return "Włochy (demo)";
+        if (lat >= 50 && lat <= 60 && lon >= -11 && lon <= 2) return "Wielka Brytania / Irlandia (demo)";
+        if (lat >= 36 && lat <= 42 && lon >= 19 && lon <= 29) return "Grecja (demo)";
+
+        // Ameryka Północna
+        if (lat >= 25 && lat <= 49 && lon >= -125 && lon <= -66) return "USA (demo)";
+        if (lat >= 49 && lat <= 70 && lon >= -140 && lon <= -60) return "Kanada (demo)";
+        if (lat >= 14 && lat <= 33 && lon >= -118 && lon <= -86) return "Meksyk / Ameryka Środkowa (demo)";
+
+        // Ameryka Południowa
+        if (lat >= -35 && lat <= 6 && lon >= -75 && lon <= -34) return "Brazylia (demo)";
+        if (lat >= -55 && lat <= -20 && lon >= -75 && lon <= -53) return "Argentyna / Chile (demo)";
+
+        // Afryka
+        if (lat >= -35 && lat <= 37 && lon >= -20 && lon <= 50) return "Afryka (region zbiorczy, demo)";
+        if (lat >= 0 && lat <= 20 && lon >= 10 && lon <= 25) return "Nigeria / Afryka Zachodnia (demo)";
+        if (lat >= 10 && lat <= 30 && lon >= -10 && lon <= 30) return "Sahel / Afryka Północna (demo)";
+
+        // Bliski Wschód
+        if (lat >= 18 && lat <= 33 && lon >= 35 && lon <= 60) return "Bliski Wschód (demo)";
+
+        // Azja
+        if (lat >= 8 && lat <= 37 && lon >= 68 && lon <= 97) return "Indie / Pakistan (demo)";
+        if (lat >= 5 && lat <= 25 && lon >= 97 && lon <= 130) return "Azja Południowo-Wschodnia (demo)";
+        if (lat >= 20 && lat <= 50 && lon >= 97 && lon <= 135) return "Chiny (demo)";
+        if (lat >= 33 && lat <= 45 && lon >= 126 && lon <= 146) return "Japonia (demo)";
+
+        // Australia / Oceania
+        if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) return "Australia (demo)";
+        if (lat >= -25 && lat <= 0 && lon >= 155 && lon <= 180) return "Pacyfik / wyspy Oceanii (demo)";
+
+        // Domyślnie – ocean / obszar międzynarodowy
+        return "Ocean / obszar międzynarodowy (demo)";
+      }
+
+      // --- DEMO DATA: wyraźne, kolorowe klastry + region_label + country_label + reason ---
       function loadDemoDataOnly() {
         dataModeLabel.textContent = "DEMO / offline";
         snapshotTimeLabel.textContent = "(syntetyczny jednominutowy snapshot)";
@@ -999,7 +1053,8 @@
             risk_index: risk,
             event_type: "normal",
             region_label: pickRandom(normalRegions),
-            reason: "Typowa dobowa fizjologia populacji; brak wyraźnych sygnałów kryzysowych (baseline)."
+            country_label: guessCountryFromLatLon(lat, lon),
+            reason: "Typowa dobowa fizjologia populacji; brak wyraźnych sygnałów kryzysowych (baseline, demo)."
           });
         }
 
@@ -1021,6 +1076,7 @@
             risk_index: risk,
             event_type: "heatwave_risk",
             region_label: pickRandom(heatRegions),
+            country_label: guessCountryFromLatLon(lat, lon),
             reason: "Podwyższony HR, obniżone HRV i lokalne warunki gorącego, suchego klimatu – scenariusz długotrwałej fali upałów (demo)."
           });
         }
@@ -1043,6 +1099,7 @@
             risk_index: risk,
             event_type: "flood_risk",
             region_label: pickRandom(floodRegions),
+            country_label: guessCountryFromLatLon(lat, lon),
             reason: "Pas równikowy o wysokiej wilgotności, korelacja z epizodami intensywnych opadów i lokalnym podniesieniem HR (demo)."
           });
         }
@@ -1065,6 +1122,7 @@
             risk_index: risk,
             event_type: "conflict_risk",
             region_label: pickRandom(conflictRegions),
+            country_label: guessCountryFromLatLon(lat, lon),
             reason: "Zwiększone obciążenie stresem populacyjnym (HR↑, HRV↓) w regionie o znanym napięciu geopolitycznym (scenariusz konfliktowy – demo)."
           });
         }
@@ -1087,6 +1145,7 @@
             risk_index: risk,
             event_type: "infrastructure_stress",
             region_label: pickRandom(infraRegions),
+            country_label: guessCountryFromLatLon(lat, lon),
             reason: "Wysoka aktywność w gęsto zaludnionej aglomeracji (dojazdy, praca zmianowa, przeciążenie sieci); wzorzec przeciążenia infrastruktury (demo)."
           });
         }
