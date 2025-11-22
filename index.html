@@ -16,12 +16,9 @@
       --accent: #b3c7ff;
       --accent-strong: #ff8ddc;
       --accent-warm: #ffc857;
-      --danger: #ff4f9f;
-      --ok: #78c8ff;
       --text-main: #f5f7ff;
       --text-soft: #aeb3d9;
       --radius-xl: 18px;
-      --radius-md: 12px;
       --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.55);
     }
 
@@ -447,386 +444,378 @@
     </section>
   </aside>
 
-  <!-- Three.js -->
-  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+  <!-- SCRIPT: cała logika + import THREE -->
+  <script type="module">
+    import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
 
-  <script>
-  (function() {
-    // --- KONFIGURACJA API ---
-    const API_BASE = "http://localhost:8000"; // jeśli brak backendu, strona przejdzie w DEMO
-    const SNAPSHOT_ENDPOINT = API_BASE + "/globe/snapshot?n_points=2000";
+    (function() {
+      const API_BASE = "http://localhost:8000";
+      const SNAPSHOT_ENDPOINT = API_BASE + "/globe/snapshot?n_points=2000";
 
-    const container = document.getElementById("globe-container");
-    const tooltip = document.getElementById("tooltip");
-    const riskSlider = document.getElementById("risk-slider");
-    const riskValueLabel = document.getElementById("risk-value");
-    const dataModeLabel = document.getElementById("data-mode-label");
-    const snapshotTimeLabel = document.getElementById("snapshot-time");
-    const checkboxes = Array.from(
-      document.querySelectorAll('#controls-card input[type="checkbox"]')
-    );
-
-    const mAvgHR = document.getElementById("m-avg-hr");
-    const mAvgHRV = document.getElementById("m-avg-hrv");
-    const mCount = document.getElementById("m-count");
-
-    let scene, camera, renderer;
-    let globeMesh, wireMesh, atmosphereMesh;
-    let pointsGroup;
-    let raycaster, mouse;
-    let isDragging = false;
-    let prevMouse = { x: 0, y: 0 };
-    let targetRot = { x: 0, y: 0 };
-    let currentRot = { x: 0, y: 0 };
-    let globeData = [];
-
-    const radius = 1.2; // większa kula = bardziej widoczna
-
-    const colorMap = {
-      normal: new THREE.Color(0x78c8ff),
-      heatwave_risk: new THREE.Color(0xff9966),
-      flood_risk: new THREE.Color(0x4b8dff),
-      conflict_risk: new THREE.Color(0xff4f9f),
-      infrastructure_stress: new THREE.Color(0xffc857),
-    };
-
-    function initScene() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x050713);
-
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
-
-      camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 100);
-      camera.position.set(0, 0, 4.2);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio || 1);
-      renderer.setSize(width, height);
-      container.appendChild(renderer.domElement);
-
-      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-      scene.add(ambient);
-
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-      dirLight.position.set(3, 2, 3);
-      scene.add(dirLight);
-
-      // Kula Ziemi – jaśniejsza, większa
-      const globeGeo = new THREE.SphereGeometry(radius, 64, 64);
-      const globeMat = new THREE.MeshPhongMaterial({
-        color: 0x27346e,
-        emissive: 0x050713,
-        shininess: 26,
-        transparent: true,
-        opacity: 0.95,
-      });
-      globeMesh = new THREE.Mesh(globeGeo, globeMat);
-      scene.add(globeMesh);
-
-      // Siatka
-      const wireGeo = new THREE.SphereGeometry(radius * 1.003, 32, 32);
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: 0x4e60a5,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.32,
-      });
-      wireMesh = new THREE.Mesh(wireGeo, wireMat);
-      scene.add(wireMesh);
-
-      // Atmosfera
-      const atmoGeo = new THREE.SphereGeometry(radius * 1.06, 40, 40);
-      const atmoMat = new THREE.MeshBasicMaterial({
-        color: 0x6fa8ff,
-        transparent: true,
-        opacity: 0.18,
-      });
-      atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
-      scene.add(atmosphereMesh);
-
-      // Gwiazdy w tle
-      const starsGeometry = new THREE.BufferGeometry();
-      const starCount = 900;
-      const positions = new Float32Array(starCount * 3);
-      for (let i = 0; i < starCount; i++) {
-        const r = 9 + Math.random() * 8;
-        const theta = Math.random() * 2 * Math.PI;
-        const phi = Math.acos(2 * Math.random() - 1);
-        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-        positions[i * 3 + 2] = r * Math.cos(phi);
-      }
-      starsGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      const starsMaterial = new THREE.PointsMaterial({
-        size: 0.04,
-        color: 0xaec4ff,
-        transparent: true,
-        opacity: 0.45,
-      });
-      const stars = new THREE.Points(starsGeometry, starsMaterial);
-      scene.add(stars);
-
-      pointsGroup = new THREE.Group();
-      scene.add(pointsGroup);
-
-      raycaster = new THREE.Raycaster();
-      mouse = new THREE.Vector2();
-
-      window.addEventListener("resize", onResize);
-      container.addEventListener("mousemove", onMouseMove);
-      container.addEventListener("mouseleave", () => (tooltip.style.opacity = 0));
-      container.addEventListener("mousedown", onMouseDown);
-      container.addEventListener("mouseup", onMouseUp);
-      container.addEventListener("mouseout", onMouseUp);
-
-      animate();
-    }
-
-    function onResize() {
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    }
-
-    function latLonToVector3(lat, lon, r = radius) {
-      const phi = (90 - lat) * (Math.PI / 180);
-      const theta = (lon + 180) * (Math.PI / 180);
-      const x = -r * Math.sin(phi) * Math.cos(theta);
-      const z = r * Math.sin(phi) * Math.sin(theta);
-      const y = r * Math.cos(phi);
-      return new THREE.Vector3(x, y, z);
-    }
-
-    function clearPoints() {
-      while (pointsGroup.children.length > 0) {
-        const child = pointsGroup.children.pop();
-        child.geometry.dispose();
-        if (child.material) {
-          if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
-          else child.material.dispose();
-        }
-      }
-    }
-
-    function buildPoints() {
-      clearPoints();
-      if (!globeData || globeData.length === 0) return;
-
-      const minRisk = parseFloat(riskSlider.value) / 100.0;
-      const enabledEvents = new Set(
-        checkboxes.filter((cb) => cb.checked).map((cb) => cb.dataset.event)
+      const container = document.getElementById("globe-container");
+      const tooltip = document.getElementById("tooltip");
+      const riskSlider = document.getElementById("risk-slider");
+      const riskValueLabel = document.getElementById("risk-value");
+      const dataModeLabel = document.getElementById("data-mode-label");
+      const snapshotTimeLabel = document.getElementById("snapshot-time");
+      const checkboxes = Array.from(
+        document.querySelectorAll('#controls-card input[type="checkbox"]')
       );
 
-      globeData.forEach((p) => {
-        if (!enabledEvents.has(p.event_type)) return;
-        if (p.risk_index < minRisk) return;
+      const mAvgHR = document.getElementById("m-avg-hr");
+      const mAvgHRV = document.getElementById("m-avg-hrv");
+      const mCount = document.getElementById("m-count");
 
-        const pos = latLonToVector3(p.lat, p.lon);
-        const size = 0.012 + 0.04 * p.risk_index; // większe, żeby były widoczne
+      let scene, camera, renderer;
+      let globeMesh, wireMesh, atmosphereMesh;
+      let pointsGroup;
+      let raycaster, mouse;
+      let isDragging = false;
+      let prevMouse = { x: 0, y: 0 };
+      let targetRot = { x: 0, y: 0 };
+      let currentRot = { x: 0, y: 0 };
+      let globeData = [];
 
-        const geom = new THREE.SphereGeometry(size, 14, 14);
-        const baseColor = colorMap[p.event_type] || colorMap.normal;
-        const mat = new THREE.MeshPhongMaterial({
-          color: baseColor,
-          emissive: baseColor.clone().multiplyScalar(0.55),
-          shininess: 50,
+      const radius = 1.2;
+
+      const colorMap = {
+        normal: new THREE.Color(0x78c8ff),
+        heatwave_risk: new THREE.Color(0xff9966),
+        flood_risk: new THREE.Color(0x4b8dff),
+        conflict_risk: new THREE.Color(0xff4f9f),
+        infrastructure_stress: new THREE.Color(0xffc857),
+      };
+
+      function initScene() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050713);
+
+        const width = container.clientWidth || window.innerWidth;
+        const height = container.clientHeight || window.innerHeight;
+
+        camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 100);
+        camera.position.set(0, 0, 4.2);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio || 1);
+        renderer.setSize(width, height);
+        container.appendChild(renderer.domElement);
+
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(3, 2, 3);
+        scene.add(dirLight);
+
+        const globeGeo = new THREE.SphereGeometry(radius, 64, 64);
+        const globeMat = new THREE.MeshPhongMaterial({
+          color: 0x27346e,
+          emissive: 0x050713,
+          shininess: 26,
+          transparent: true,
+          opacity: 0.95,
+        });
+        globeMesh = new THREE.Mesh(globeGeo, globeMat);
+        scene.add(globeMesh);
+
+        const wireGeo = new THREE.SphereGeometry(radius * 1.003, 32, 32);
+        const wireMat = new THREE.MeshBasicMaterial({
+          color: 0x4e60a5,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.32,
+        });
+        wireMesh = new THREE.Mesh(wireGeo, wireMat);
+        scene.add(wireMesh);
+
+        const atmoGeo = new THREE.SphereGeometry(radius * 1.06, 40, 40);
+        const atmoMat = new THREE.MeshBasicMaterial({
+          color: 0x6fa8ff,
+          transparent: true,
+          opacity: 0.18,
+        });
+        atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
+        scene.add(atmosphereMesh);
+
+        const starsGeometry = new THREE.BufferGeometry();
+        const starCount = 900;
+        const positions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+          const r = 9 + Math.random() * 8;
+          const theta = Math.random() * 2 * Math.PI;
+          const phi = Math.acos(2 * Math.random() - 1);
+          positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+          positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+          positions[i * 3 + 2] = r * Math.cos(phi);
+        }
+        starsGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const starsMaterial = new THREE.PointsMaterial({
+          size: 0.04,
+          color: 0xaec4ff,
+          transparent: true,
+          opacity: 0.45,
+        });
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+
+        pointsGroup = new THREE.Group();
+        scene.add(pointsGroup);
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        window.addEventListener("resize", onResize);
+        container.addEventListener("mousemove", onMouseMove);
+        container.addEventListener("mouseleave", () => (tooltip.style.opacity = 0));
+        container.addEventListener("mousedown", onMouseDown);
+        container.addEventListener("mouseup", onMouseUp);
+        container.addEventListener("mouseout", onMouseUp);
+
+        animate();
+      }
+
+      function onResize() {
+        const width = container.clientWidth || window.innerWidth;
+        const height = container.clientHeight || window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+
+      function latLonToVector3(lat, lon, r = radius) {
+        const phi = (90 - lat) * (Math.PI / 180);
+        const theta = (lon + 180) * (Math.PI / 180);
+        const x = -r * Math.sin(phi) * Math.cos(theta);
+        const z = r * Math.sin(phi) * Math.sin(theta);
+        const y = r * Math.cos(phi);
+        return new THREE.Vector3(x, y, z);
+      }
+
+      function clearPoints() {
+        while (pointsGroup.children.length > 0) {
+          const child = pointsGroup.children.pop();
+          child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
+            else child.material.dispose();
+          }
+        }
+      }
+
+      function buildPoints() {
+        clearPoints();
+        if (!globeData || globeData.length === 0) return;
+
+        const minRisk = parseFloat(riskSlider.value) / 100.0;
+        const enabledEvents = new Set(
+          checkboxes.filter((cb) => cb.checked).map((cb) => cb.dataset.event)
+        );
+
+        globeData.forEach((p) => {
+          if (!enabledEvents.has(p.event_type)) return;
+          if (p.risk_index < minRisk) return;
+
+          const pos = latLonToVector3(p.lat, p.lon);
+          const size = 0.012 + 0.04 * p.risk_index;
+
+          const geom = new THREE.SphereGeometry(size, 14, 14);
+          const baseColor = colorMap[p.event_type] || colorMap.normal;
+          const mat = new THREE.MeshPhongMaterial({
+            color: baseColor,
+            emissive: baseColor.clone().multiplyScalar(0.55),
+            shininess: 50,
+          });
+
+          const mesh = new THREE.Mesh(geom, mat);
+          mesh.position.copy(pos);
+          mesh.userData = p;
+          pointsGroup.add(mesh);
         });
 
-        const mesh = new THREE.Mesh(geom, mat);
-        mesh.position.copy(pos);
-        mesh.userData = p;
-        pointsGroup.add(mesh);
-      });
+        updateMetrics();
+      }
 
-      updateMetrics();
-    }
+      function updateTooltip(event) {
+        const rect = container.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
 
-    function updateTooltip(event) {
-      const rect = container.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+        mouse.x = (x / rect.width) * 2 - 1;
+        mouse.y = -(y / rect.height) * 2 + 1;
 
-      mouse.x = (x / rect.width) * 2 - 1;
-      mouse.y = -(y / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(pointsGroup.children, true);
 
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(pointsGroup.children, true);
-
-      if (intersects.length > 0) {
-        const obj = intersects[0].object;
-        const d = obj.userData;
-        if (d) {
-          tooltip.style.left = x + 10 + "px";
-          tooltip.style.top = y + 10 + "px";
-          tooltip.innerHTML =
-            "Lat: " + d.lat.toFixed(1) + "°<br/>" +
-            "Lon: " + d.lon.toFixed(1) + "°<br/>" +
-            "Local time: " + d.local_hour.toFixed(1) + " h<br/>" +
-            "HR: " + d.HR.toFixed(1) + " bpm<br/>" +
-            "HRV: " + d.HRV.toFixed(1) + "<br/>" +
-            "risk_index: " + d.risk_index.toFixed(2) + "<br/>" +
-            "AI tag: <b>" + d.event_type + "</b>";
-          tooltip.style.opacity = 1;
+        if (intersects.length > 0) {
+          const obj = intersects[0].object;
+          const d = obj.userData;
+          if (d) {
+            tooltip.style.left = x + 10 + "px";
+            tooltip.style.top = y + 10 + "px";
+            tooltip.innerHTML =
+              "Lat: " + d.lat.toFixed(1) + "°<br/>" +
+              "Lon: " + d.lon.toFixed(1) + "°<br/>" +
+              "Local time: " + d.local_hour.toFixed(1) + " h<br/>" +
+              "HR: " + d.HR.toFixed(1) + " bpm<br/>" +
+              "HRV: " + d.HRV.toFixed(1) + "<br/>" +
+              "risk_index: " + d.risk_index.toFixed(2) + "<br/>" +
+              "AI tag: <b>" + d.event_type + "</b>";
+            tooltip.style.opacity = 1;
+          } else {
+            tooltip.style.opacity = 0;
+          }
         } else {
           tooltip.style.opacity = 0;
         }
-      } else {
-        tooltip.style.opacity = 0;
       }
-    }
 
-    function onMouseMove(event) {
-      updateTooltip(event);
-      if (!isDragging) return;
-      const rect = container.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const dx = x - prevMouse.x;
-      const dy = y - prevMouse.y;
-      prevMouse.x = x;
-      prevMouse.y = y;
-      targetRot.y += dx * 0.005;
-      targetRot.x += dy * 0.005;
-      targetRot.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetRot.x));
-    }
-
-    function onMouseDown(event) {
-      isDragging = true;
-      const rect = container.getBoundingClientRect();
-      prevMouse.x = event.clientX - rect.left;
-      prevMouse.y = event.clientY - rect.top;
-    }
-
-    function onMouseUp() {
-      isDragging = false;
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Auto–obrót
-      targetRot.y += 0.0008;
-
-      currentRot.x += (targetRot.x - currentRot.x) * 0.12;
-      currentRot.y += (targetRot.y - currentRot.y) * 0.12;
-
-      [globeMesh, wireMesh, atmosphereMesh, pointsGroup].forEach((obj) => {
-        if (!obj) return;
-        obj.rotation.x = currentRot.x;
-        obj.rotation.y = currentRot.y;
-      });
-
-      renderer.render(scene, camera);
-    }
-
-    function updateMetrics() {
-      if (!globeData || globeData.length === 0) {
-        mAvgHR.textContent = "–";
-        mAvgHRV.textContent = "–";
-        mCount.textContent = "–";
-        return;
+      function onMouseMove(event) {
+        updateTooltip(event);
+        if (!isDragging) return;
+        const rect = container.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const dx = x - prevMouse.x;
+        const dy = y - prevMouse.y;
+        prevMouse.x = x;
+        prevMouse.y = y;
+        targetRot.y += dx * 0.005;
+        targetRot.x += dy * 0.005;
+        targetRot.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetRot.x));
       }
-      let sumHR = 0;
-      let sumHRV = 0;
-      let n = globeData.length;
-      globeData.forEach((p) => {
-        sumHR += p.HR;
-        sumHRV += p.HRV;
-      });
-      mAvgHR.textContent = (sumHR / n).toFixed(1);
-      mAvgHRV.textContent = (sumHRV / n).toFixed(1);
-      mCount.textContent = n.toString();
-    }
 
-    async function loadDataFromApi() {
-      try {
-        const res = await fetch(SNAPSHOT_ENDPOINT);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const json = await res.json();
-        globeData = json.points || [];
-        dataModeLabel.textContent = "API / live";
-        if (json.timestamp_utc) {
-          snapshotTimeLabel.textContent = new Date(json.timestamp_utc).toISOString();
+      function onMouseDown(event) {
+        isDragging = true;
+        const rect = container.getBoundingClientRect();
+        prevMouse.x = event.clientX - rect.left;
+        prevMouse.y = event.clientY - rect.top;
+      }
+
+      function onMouseUp() {
+        isDragging = false;
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Auto–obrót
+        targetRot.y += 0.0008;
+
+        currentRot.x += (targetRot.x - currentRot.x) * 0.12;
+        currentRot.y += (targetRot.y - currentRot.y) * 0.12;
+
+        [globeMesh, wireMesh, atmosphereMesh, pointsGroup].forEach((obj) => {
+          if (!obj) return;
+          obj.rotation.x = currentRot.x;
+          obj.rotation.y = currentRot.y;
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      function updateMetrics() {
+        if (!globeData || globeData.length === 0) {
+          mAvgHR.textContent = "–";
+          mAvgHRV.textContent = "–";
+          mCount.textContent = "–";
+          return;
         }
-        buildPoints();
-      } catch (err) {
-        console.warn("API niedostępne, tryb DEMO:", err);
-        dataModeLabel.textContent = "DEMO / offline";
-        snapshotTimeLabel.textContent = "(syntetyczny snapshot)";
-        globeData = generateDemoData(2000);
-        buildPoints();
+        let sumHR = 0;
+        let sumHRV = 0;
+        let n = globeData.length;
+        globeData.forEach((p) => {
+          sumHR += p.HR;
+          sumHRV += p.HRV;
+        });
+        mAvgHR.textContent = (sumHR / n).toFixed(1);
+        mAvgHRV.textContent = (sumHRV / n).toFixed(1);
+        mCount.textContent = n.toString();
       }
-    }
 
-    // Dane demo (gdy brak backendu)
-    function generateDemoData(n) {
-      const out = [];
-      for (let i = 0; i < n; i++) {
-        const lat = (Math.random() * 140) - 70;
-        const lon = (Math.random() * 360) - 180;
-        const localHour = (12 + lon / 15 + 24) % 24;
-        const baselineHR = 70 - 10 * Math.cos((localHour - 11) * 2 * Math.PI / 24);
-        const HR = clamp(baselineHR + randn() * 6, 45, 120);
-        const baselineHRV = 60 + 20 * Math.cos((localHour - 3) * 2 * Math.PI / 24);
-        const HRV = clamp(baselineHRV + randn() * 10, 10, 140);
-        const normHR = (HR - 45) / (120 - 45);
-        const normHRV = (HRV - 10) / (140 - 10);
-        let risk = normHR - normHRV + randn() * 0.08;
-        risk = (risk - (-1)) / (1 - (-1));
-        risk = clamp(risk, 0, 1);
+      async function loadDataFromApi() {
+        try {
+          const res = await fetch(SNAPSHOT_ENDPOINT);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const json = await res.json();
+          globeData = json.points || [];
+          dataModeLabel.textContent = "API / live";
+          if (json.timestamp_utc) {
+            snapshotTimeLabel.textContent = new Date(json.timestamp_utc).toISOString();
+          }
+          buildPoints();
+        } catch (err) {
+          console.warn("API niedostępne, tryb DEMO:", err);
+          dataModeLabel.textContent = "DEMO / offline";
+          snapshotTimeLabel.textContent = "(syntetyczny snapshot)";
+          globeData = generateDemoData(2000);
+          buildPoints();
+        }
+      }
 
-        let eventType = "normal";
-        if (risk > 0.78 && lat > 20) eventType = "heatwave_risk";
-        if (risk > 0.7 && lat < 25 && lat > -5 && lon < -20) eventType = "flood_risk";
-        if (risk > 0.7 && lat > 30 && lon > -10 && lon < 50) eventType = "conflict_risk";
-        if (risk > 0.7 && lat > 35 && lon < -30) eventType = "infrastructure_stress";
+      function generateDemoData(n) {
+        const out = [];
+        for (let i = 0; i < n; i++) {
+          const lat = (Math.random() * 140) - 70;
+          const lon = (Math.random() * 360) - 180;
+          const localHour = (12 + lon / 15 + 24) % 24;
+          const baselineHR = 70 - 10 * Math.cos((localHour - 11) * 2 * Math.PI / 24);
+          const HR = clamp(baselineHR + randn() * 6, 45, 120);
+          const baselineHRV = 60 + 20 * Math.cos((localHour - 3) * 2 * Math.PI / 24);
+          const HRV = clamp(baselineHRV + randn() * 10, 10, 140);
+          const normHR = (HR - 45) / (120 - 45);
+          const normHRV = (HRV - 10) / (140 - 10);
+          let risk = normHR - normHRV + randn() * 0.08;
+          risk = (risk - (-1)) / (1 - (-1));
+          risk = clamp(risk, 0, 1);
 
-        out.push({
-          lat,
-          lon,
-          timestamp_utc: new Date().toISOString(),
-          local_hour: localHour,
-          theta: localHour * 2 * Math.PI / 24,
-          HR,
-          HRV,
-          risk_index: risk,
-          event_type: eventType,
+          let eventType = "normal";
+          if (risk > 0.78 && lat > 20) eventType = "heatwave_risk";
+          if (risk > 0.7 && lat < 25 && lat > -5 && lon < -20) eventType = "flood_risk";
+          if (risk > 0.7 && lat > 30 && lon > -10 && lon < 50) eventType = "conflict_risk";
+          if (risk > 0.7 && lat > 35 && lon < -30) eventType = "infrastructure_stress";
+
+          out.push({
+            lat,
+            lon,
+            timestamp_utc: new Date().toISOString(),
+            local_hour: localHour,
+            theta: localHour * 2 * Math.PI / 24,
+            HR,
+            HRV,
+            risk_index: risk,
+            event_type: eventType,
+          });
+        }
+        return out;
+      }
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function randn() {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      }
+
+      function initControls() {
+        checkboxes.forEach((cb) => {
+          cb.addEventListener("change", () => buildPoints());
+        });
+        riskSlider.addEventListener("input", () => {
+          const v = parseFloat(riskSlider.value) / 100.0;
+          riskValueLabel.textContent = v.toFixed(2);
+          buildPoints();
         });
       }
-      return out;
-    }
 
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
-
-    // prosty Gauss (Box–Muller)
-    function randn() {
-      let u = 0, v = 0;
-      while (u === 0) u = Math.random();
-      while (v === 0) v = Math.random();
-      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-    }
-
-    function initControls() {
-      checkboxes.forEach((cb) => {
-        cb.addEventListener("change", () => buildPoints());
-      });
-      riskSlider.addEventListener("input", () => {
-        const v = parseFloat(riskSlider.value) / 100.0;
-        riskValueLabel.textContent = v.toFixed(2);
-        buildPoints();
-      });
-    }
-
-    // START
-    initScene();
-    initControls();
-    loadDataFromApi();
-  })();
+      initScene();
+      initControls();
+      loadDataFromApi();
+    })();
   </script>
 </body>
 </html>
