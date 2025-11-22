@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
     name="description"
-    content="Global Heartbeat AI – demo globusa 3D z kolorowymi klastrami zdarzeń i filtrowaniem po typach ryzyka."
+    content="Global Heartbeat AI – demo globusa 3D z kolorowymi klastrami zdarzeń, filtrowaniem ryzyka oraz opisem regionu i scenariusza."
   />
   <style>
     :root {
@@ -78,7 +78,7 @@
       opacity: 0;
       transition: opacity 0.1s ease-out;
       z-index: 10;
-      max-width: 260px;
+      max-width: 280px;
     }
 
     /* Prawy panel */
@@ -348,7 +348,7 @@
       </div>
       <h1>Planetarny puls ludzkości</h1>
       <p class="subtitle">
-        Kolorowe klastry zdarzeń na globusie 3D. Każdy typ ryzyka ma swój własny kolor i region.
+        Kolorowe klastry zdarzeń na globusie 3D. Każdy punkt ma przypisany region i scenariusz AI (demo).
       </p>
       <div class="tag-row">
         <span class="tag">DEMO</span>
@@ -380,7 +380,7 @@
         <span id="risk-value">0.00</span><br />
         <input id="risk-slider" type="range" min="0" max="100" value="0" />
         <p style="margin:4px 0 0; color:var(--text-soft); font-size:10px;">
-          Przesuń w prawo, aby zostawić tylko najmocniejsze punkty (największe i najbardziej świecące).
+          Przesuń w prawo, aby zostawić tylko najmocniejsze punkty (największe i najbardziej „nerwowe”).
         </p>
       </div>
 
@@ -423,23 +423,24 @@
         <div class="about-block">
           <h3>Cel tej wersji DEMO</h3>
           <p>
-            Ta wersja demonstruje samą logikę wizualizacji: każdy typ zdarzenia ma własny <b>mocny kolor</b>
-            oraz <b>odrębny region</b> na globusie, żeby łatwo było zauważyć działanie filtrów.
+            Ta wersja pokazuje, jak mógłby wyglądać panel „oglądający” planetarny puls ludzkości:
+            każdy punkt ma przypisaną <b>lokalizację (region/kraj)</b> oraz <b>opis scenariusza</b>, który tłumaczy,
+            dlaczego AI (w trybie demonstracyjnym) oznaczyła go jako dany typ ryzyka.
           </p>
         </div>
 
         <div class="about-block">
-          <h3>Rozmieszczenie klastrów</h3>
+          <h3>Przykładowe scenariusze (demo)</h3>
           <ul class="about-list">
-            <li><b>normal (turkus)</b> – rozproszone globalnie, mniejsze punkty tła,</li>
-            <li><b>heatwave_risk (pomarańczowy)</b> – pas gorący (Afryka / Indie / Bliski Wschód),</li>
-            <li><b>flood_risk (niebieski)</b> – strefa równikowa oceaniczna,</li>
-            <li><b>conflict_risk (róż/fuksja)</b> – regiony lądowe na półkuli północnej,</li>
-            <li><b>infrastructure_stress (żółty)</b> – obszary wysoko zurbanizowane (ok. 40–60°N).</li>
+            <li><b>heatwave_risk</b> – wysoka temperatura, podniesiony HR, obniżone HRV, długotrwały upał,</li>
+            <li><b>flood_risk</b> – pas równikowy, zwiększona wilgotność i intensywne opady,</li>
+            <li><b>conflict_risk</b> – regiony o podwyższonym napięciu geopolitycznym, wyższe HR i obciążenie stresem,</li>
+            <li><b>infrastructure_stress</b> – gęsto zaludnione megamiasta, wysoka aktywność i przeciążenie sieci,</li>
+            <li><b>normal</b> – tło populacyjne, zwykła dobowa fizjologia.</li>
           </ul>
           <p style="margin-top:4px;">
-            Odznaczaj checkboxy, żeby zobaczyć, które kolory/regiony znikają z globusa. Suwak
-            <code>risk_index</code> zostawia tylko najmocniej obciążone punkty (większe i jaśniejsze).
+            Wszystkie przykłady są syntetyczne, ale struktura danych odpowiada temu, co można byłoby podłączyć
+            do realnych strumieni HR/HRV i danych środowiskowych.
           </p>
         </div>
       </div>
@@ -630,7 +631,6 @@
           const geom = new THREE.SphereGeometry(baseSize, 18, 18);
           const baseColor = colorMap[p.event_type] || colorMap.normal;
 
-          // KLUCZOWA ZMIANA: MeshBasicMaterial (bez świateł)
           const mat = new THREE.MeshBasicMaterial({
             color: baseColor,
           });
@@ -664,14 +664,27 @@
           if (d) {
             tooltip.style.left = x + 10 + "px";
             tooltip.style.top = y + 10 + "px";
-            tooltip.innerHTML =
-              "Lat: " + d.lat.toFixed(1) + "°<br/>" +
-              "Lon: " + d.lon.toFixed(1) + "°<br/>" +
+
+            let html = "";
+
+            if (d.region_label) {
+              html += "<b>" + d.region_label + "</b><br/>";
+            }
+
+            html += "Typ: <b>" + d.event_type + "</b><br/>";
+
+            html +=
+              "Lat: " + d.lat.toFixed(1) + "° &nbsp; Lon: " + d.lon.toFixed(1) + "°<br/>" +
               "Local time: " + d.local_hour.toFixed(1) + " h<br/>" +
-              "HR: " + d.HR.toFixed(1) + " bpm<br/>" +
-              "HRV: " + d.HRV.toFixed(1) + "<br/>" +
-              "risk_index: " + d.risk_index.toFixed(2) + "<br/>" +
-              "AI tag: <b>" + d.event_type + "</b>";
+              "HR: " + d.HR.toFixed(1) + " bpm &nbsp; HRV: " + d.HRV.toFixed(1) + "<br/>" +
+              "risk_index: " + d.risk_index.toFixed(2) + "<br/>";
+
+            if (d.reason) {
+              html += "<span style='color:#aeb3d9'>Uzasadnienie (demo):</span><br/>" +
+                      "<span style='color:#d9ddff'>" + d.reason + "</span>";
+            }
+
+            tooltip.innerHTML = html;
             tooltip.style.opacity = 1;
           } else {
             tooltip.style.opacity = 0;
@@ -776,7 +789,7 @@
           " · I:" + counts.infrastructure_stress;
       }
 
-      // --- DEMO DATA: wyraźne, kolorowe klastry ---
+      // --- DEMO DATA: wyraźne, kolorowe klastry + region_label + reason ---
       function loadDemoDataOnly() {
         dataModeLabel.textContent = "DEMO / offline";
         snapshotTimeLabel.textContent = "(syntetyczny jednominutowy snapshot)";
@@ -784,9 +797,40 @@
         buildPoints();
       }
 
+      function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
       function generateClusteredDemoData() {
         const out = [];
         const now = new Date().toISOString();
+
+        const heatRegions = [
+          "Sahel (Afryka)",
+          "Północne Indie / Pakistan",
+          "Półwysep Arabski"
+        ];
+        const floodRegions = [
+          "Delta rzeki w strefie tropikalnej",
+          "Wybrzeże monsunowe",
+          "Nisko położone wyspy równikowe"
+        ];
+        const conflictRegions = [
+          "Europa Wschodnia",
+          "Bliski Wschód",
+          "Strefa konfliktu (płn. Afryka)"
+        ];
+        const infraRegions = [
+          "Megamiasto (Ameryka Płn.)",
+          "Megamiasto (Europa)",
+          "Megamiasto (Azja Wschodnia)"
+        ];
+        const normalRegions = [
+          "Obszar wiejski",
+          "Miasto o umiarkowanym obciążeniu",
+          "Strefa przybrzeżna",
+          "Wnętrze kontynentu"
+        ];
 
         // normal – rozproszone
         for (let i = 0; i < 400; i++) {
@@ -805,10 +849,12 @@
             HRV,
             risk_index: risk,
             event_type: "normal",
+            region_label: pickRandom(normalRegions),
+            reason: "Typowa dobowa fizjologia populacji; brak wyraźnych sygnałów kryzysowych (baseline)."
           });
         }
 
-        // heatwave_risk – 10–35N, Afryka / Bliski Wschód
+        // heatwave_risk – 10–35N, Afryka / Bliski Wschód / Indie
         for (let i = 0; i < 120; i++) {
           const lat = 10 + Math.random() * 25;
           const lon = -20 + Math.random() * 100;
@@ -825,6 +871,8 @@
             HRV,
             risk_index: risk,
             event_type: "heatwave_risk",
+            region_label: pickRandom(heatRegions),
+            reason: "Podwyższony HR, obniżone HRV i lokalne warunki gorącego, suchego klimatu – scenariusz długotrwałej fali upałów (demo)."
           });
         }
 
@@ -845,6 +893,8 @@
             HRV,
             risk_index: risk,
             event_type: "flood_risk",
+            region_label: pickRandom(floodRegions),
+            reason: "Pas równikowy o wysokiej wilgotności, korelacja z epizodami intensywnych opadów i lokalnym podniesieniem HR (demo)."
           });
         }
 
@@ -865,6 +915,8 @@
             HRV,
             risk_index: risk,
             event_type: "conflict_risk",
+            region_label: pickRandom(conflictRegions),
+            reason: "Zwiększone obciążenie stresem populacyjnym (HR↑, HRV↓) w regionie o znanym napięciu geopolitycznym (scenariusz konfliktowy – demo)."
           });
         }
 
@@ -885,6 +937,8 @@
             HRV,
             risk_index: risk,
             event_type: "infrastructure_stress",
+            region_label: pickRandom(infraRegions),
+            reason: "Wysoka aktywność w gęsto zaludnionej aglomeracji (dojazdy, praca zmianowa, przeciążenie sieci); wzorzec przeciążenia infrastruktury (demo)."
           });
         }
 
