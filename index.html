@@ -22,9 +22,7 @@
       --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.55);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -63,13 +61,13 @@
       overflow: hidden;
       box-shadow: var(--shadow-soft);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      background: radial-gradient(circle at top, #151b3c, #050713 65%);
+      background: radial-gradient(circle at top, #1a2148, #050713 65%);
     }
 
     #tooltip {
       position: absolute;
       pointer-events: none;
-      background: rgba(5, 7, 24, 0.94);
+      background: rgba(5, 7, 24, 0.97);
       border-radius: 10px;
       padding: 8px 10px;
       border: 1px solid rgba(163, 190, 255, 0.8);
@@ -114,7 +112,7 @@
       text-transform: uppercase;
       letter-spacing: 0.16em;
       color: var(--accent);
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     .brand-dot {
@@ -154,9 +152,7 @@
       letter-spacing: 0.12em;
     }
 
-    #controls-card {
-      font-size: 11px;
-    }
+    #controls-card { font-size: 11px; }
 
     #controls-card h2,
     #metrics-card h2,
@@ -186,9 +182,7 @@
       font-weight: 600;
     }
 
-    #risk-slider {
-      width: 100%;
-    }
+    #risk-slider { width: 100%; }
 
     .controls-row {
       margin-top: 8px;
@@ -204,10 +198,10 @@
     }
 
     .metric-tile {
-      background: radial-gradient(circle at top, rgba(60, 70, 140, 0.8), rgba(7, 10, 28, 0.9));
+      background: radial-gradient(circle at top, rgba(60, 70, 140, 0.9), rgba(7, 10, 28, 0.95));
       border-radius: 12px;
       padding: 6px 7px;
-      border: 1px solid rgba(147, 164, 255, 0.5);
+      border: 1px solid rgba(147, 164, 255, 0.8);
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
     }
 
@@ -238,6 +232,11 @@
       color: var(--accent);
     }
 
+    #m-events {
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+    }
+
     /* About / sections */
     #about-card {
       flex: 1;
@@ -252,9 +251,7 @@
       max-height: 100%;
     }
 
-    .about-block {
-      margin-bottom: 10px;
-    }
+    .about-block { margin-bottom: 10px; }
 
     .about-block h3 {
       font-size: 11px;
@@ -278,9 +275,7 @@
       color: var(--text-soft);
     }
 
-    .about-list li {
-      margin-bottom: 3px;
-    }
+    .about-list li { margin-bottom: 3px; }
 
     code {
       font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -291,29 +286,17 @@
       border: 1px solid rgba(110, 130, 210, 0.5);
     }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
     @media (max-width: 900px) {
       body {
         grid-template-columns: 1fr;
         grid-template-rows: 55vh 45vh;
       }
-      #side-panel {
-        padding: 0 12px 12px 12px;
-      }
-      #globe-shell {
-        padding: 10px;
-      }
-      #globe-container {
-        border-radius: 14px;
-      }
+      #side-panel { padding: 0 12px 12px 12px; }
+      #globe-shell { padding: 10px; }
+      #globe-container { border-radius: 14px; }
     }
   </style>
 </head>
@@ -325,7 +308,7 @@
     </div>
   </div>
 
-  <!-- PRAWA: PANEL NAUKOWY / TEKSTOWY -->
+  <!-- PRAWA: PANEL -->
   <aside id="side-panel">
     <section id="header-card" class="panel-card">
       <div class="brand-label">
@@ -383,10 +366,13 @@
           <div class="metric-pill">zmienność</div>
         </div>
         <div class="metric-tile">
-          <div class="metric-label">Liczba punktów</div>
+          <div class="metric-label">Widoczne punkty</div>
           <div class="metric-value"><span id="m-count">–</span></div>
-          <div class="metric-pill">1-min snapshot</div>
+          <div class="metric-pill">po filtrach</div>
         </div>
+      </div>
+      <div style="margin-top:6px;font-size:10px;color:var(--text-soft);">
+        Aktywne zdarzenia: <span id="m-events">–</span>
       </div>
     </section>
 
@@ -406,8 +392,8 @@
         <div class="about-block">
           <h3>Warstwa AI (simplified)</h3>
           <p>
-            Warstwa AI łączy informacje fizjologiczne (HR, HRV, faza doby) z danymi środowiskowymi i kryzysowymi
-            (np. fale upałów, opady, konflikty, przeciążenie sieci). Dla każdego punktu obliczany jest:
+            Warstwa AI łączy informacje fizjologiczne (HR, HRV, faza doby) z danymi środowiskowymi i kryzysowymi.
+            Dla każdego punktu obliczany jest:
           </p>
           <ul class="about-list">
             <li><code>risk_index</code> – liczba 0–1 opisująca obciążenie / ryzyko,</li>
@@ -417,14 +403,12 @@
 
         <div class="about-block">
           <h3>Architektura systemu</h3>
-          <p>
-            System Global Heartbeat AI składa się z:
-          </p>
+          <p>System Global Heartbeat AI obejmuje:</p>
           <ul class="about-list">
-            <li><b>warstwy danych</b> – wejściowe strumienie HR/HRV + dane środowiskowe,</li>
-            <li><b>silnika analitycznego</b> – agregacja do jednominutowych snapshotów i obliczanie metryk,</li>
-            <li><b>modułu AI</b> – szacowanie ryzyka i tagowanie zdarzeń,</li>
-            <li><b>globusa 3D</b> – wizualizacji czasu zbliżonego do rzeczywistego.</li>
+            <li><b>Warstwę danych</b> – strumienie HR/HRV + dane środowiskowe,</li>
+            <li><b>Silnik analityczny</b> – agregacja do jednominutowych snapshotów i wyliczanie metryk,</li>
+            <li><b>Moduł AI</b> – szacowanie ryzyka i tagowanie zdarzeń,</li>
+            <li><b>Globus 3D</b> – wizualizację w czasie zbliżonym do rzeczywistego.</li>
           </ul>
           <p style="margin-top:4px;">
             Ten widok prezentuje pojedynczy snapshot; w wersji rozszerzonej globus może być animowany w czasie
@@ -435,16 +419,16 @@
         <div class="about-block">
           <h3>Uwaga o danych</h3>
           <p>
-            Aktualnie widzisz tryb demonstracyjny: dane mogą być syntetyczne, ale struktura jest zgodna z
-            docelowym systemem. Po podłączeniu backendu / API, globus może pracować na prawdziwych strumieniach
-            HR/HRV z urządzeń noszonych oraz na rzeczywistych danych pogodowych i kryzysowych.
+            W trybie demonstracyjnym dane są syntetyczne, ale struktura jest zgodna z docelowym systemem.
+            Po podłączeniu backendu / API, globus może pracować na prawdziwych strumieniach HR/HRV z urządzeń
+            noszonych oraz na rzeczywistych danych pogodowych i kryzysowych.
           </p>
         </div>
       </div>
     </section>
   </aside>
 
-  <!-- SCRIPT: cała logika + import THREE -->
+  <!-- SCRIPT: moduł z importem THREE -->
   <script type="module">
     import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
 
@@ -465,6 +449,7 @@
       const mAvgHR = document.getElementById("m-avg-hr");
       const mAvgHRV = document.getElementById("m-avg-hrv");
       const mCount = document.getElementById("m-count");
+      const mEvents = document.getElementById("m-events");
 
       let scene, camera, renderer;
       let globeMesh, wireMesh, atmosphereMesh;
@@ -479,11 +464,11 @@
       const radius = 1.2;
 
       const colorMap = {
-        normal: new THREE.Color(0x78c8ff),
-        heatwave_risk: new THREE.Color(0xff9966),
-        flood_risk: new THREE.Color(0x4b8dff),
-        conflict_risk: new THREE.Color(0xff4f9f),
-        infrastructure_stress: new THREE.Color(0xffc857),
+        normal: new THREE.Color(0x7fd2ff),
+        heatwave_risk: new THREE.Color(0xffa34f),
+        flood_risk: new THREE.Color(0x5b9dff),
+        conflict_risk: new THREE.Color(0xff5fb3),
+        infrastructure_stress: new THREE.Color(0xffd469),
       };
 
       function initScene() {
@@ -501,39 +486,39 @@
         renderer.setSize(width, height);
         container.appendChild(renderer.domElement);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.75);
         scene.add(ambient);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
         dirLight.position.set(3, 2, 3);
         scene.add(dirLight);
 
         const globeGeo = new THREE.SphereGeometry(radius, 64, 64);
         const globeMat = new THREE.MeshPhongMaterial({
-          color: 0x27346e,
+          color: 0x3246a0,
           emissive: 0x050713,
-          shininess: 26,
+          shininess: 32,
           transparent: true,
-          opacity: 0.95,
+          opacity: 0.96,
         });
         globeMesh = new THREE.Mesh(globeGeo, globeMat);
         scene.add(globeMesh);
 
         const wireGeo = new THREE.SphereGeometry(radius * 1.003, 32, 32);
         const wireMat = new THREE.MeshBasicMaterial({
-          color: 0x4e60a5,
+          color: 0x5569c8,
           wireframe: true,
           transparent: true,
-          opacity: 0.32,
+          opacity: 0.34,
         });
         wireMesh = new THREE.Mesh(wireGeo, wireMat);
         scene.add(wireMesh);
 
         const atmoGeo = new THREE.SphereGeometry(radius * 1.06, 40, 40);
         const atmoMat = new THREE.MeshBasicMaterial({
-          color: 0x6fa8ff,
+          color: 0x88c2ff,
           transparent: true,
-          opacity: 0.18,
+          opacity: 0.2,
         });
         atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
         scene.add(atmosphereMesh);
@@ -605,16 +590,23 @@
 
       function buildPoints() {
         clearPoints();
-        if (!globeData || globeData.length === 0) return;
+        if (!globeData || globeData.length === 0) {
+          updateMetrics([]);
+          return;
+        }
 
         const minRisk = parseFloat(riskSlider.value) / 100.0;
         const enabledEvents = new Set(
           checkboxes.filter((cb) => cb.checked).map((cb) => cb.dataset.event)
         );
 
+        const visible = [];
+
         globeData.forEach((p) => {
           if (!enabledEvents.has(p.event_type)) return;
           if (p.risk_index < minRisk) return;
+
+          visible.push(p);
 
           const pos = latLonToVector3(p.lat, p.lon);
           const size = 0.012 + 0.04 * p.risk_index;
@@ -623,17 +615,20 @@
           const baseColor = colorMap[p.event_type] || colorMap.normal;
           const mat = new THREE.MeshPhongMaterial({
             color: baseColor,
-            emissive: baseColor.clone().multiplyScalar(0.55),
-            shininess: 50,
+            emissive: baseColor.clone().multiplyScalar(0.9),
+            shininess: 70,
           });
 
           const mesh = new THREE.Mesh(geom, mat);
           mesh.position.copy(pos);
-          mesh.userData = p;
+          mesh.userData = {
+            ...p,
+            baseSize: size,
+          };
           pointsGroup.add(mesh);
         });
 
-        updateMetrics();
+        updateMetrics(visible);
       }
 
       function updateTooltip(event) {
@@ -700,7 +695,7 @@
         requestAnimationFrame(animate);
 
         // Auto–obrót
-        targetRot.y += 0.0008;
+        targetRot.y += 0.0009;
 
         currentRot.x += (targetRot.x - currentRot.x) * 0.12;
         currentRot.y += (targetRot.y - currentRot.y) * 0.12;
@@ -711,26 +706,59 @@
           obj.rotation.y = currentRot.y;
         });
 
+        // Pulsowanie punktów (oddech zależny od risk_index)
+        const t = performance.now() / 1000;
+        pointsGroup.children.forEach((mesh) => {
+          const d = mesh.userData;
+          if (!d || typeof d.baseSize !== "number") return;
+          const r = d.risk_index || 0;
+          const amp = 0.4 * r + 0.1;
+          const s = 1 + amp * Math.sin(t * 1.8 + r * 7.0);
+          const scale = Math.max(0.5, s);
+          mesh.scale.setScalar(scale);
+        });
+
         renderer.render(scene, camera);
       }
 
-      function updateMetrics() {
-        if (!globeData || globeData.length === 0) {
+      function updateMetrics(visibleData) {
+        const arr = visibleData && visibleData.length ? visibleData : globeData;
+
+        if (!arr || arr.length === 0) {
           mAvgHR.textContent = "–";
           mAvgHRV.textContent = "–";
-          mCount.textContent = "–";
+          mCount.textContent = "0";
+          mEvents.textContent = "N:0 · H:0 · F:0 · C:0 · I:0";
           return;
         }
+
         let sumHR = 0;
         let sumHRV = 0;
-        let n = globeData.length;
-        globeData.forEach((p) => {
+        const counts = {
+          normal: 0,
+          heatwave_risk: 0,
+          flood_risk: 0,
+          conflict_risk: 0,
+          infrastructure_stress: 0,
+        };
+
+        arr.forEach((p) => {
           sumHR += p.HR;
           sumHRV += p.HRV;
+          if (counts[p.event_type] !== undefined) counts[p.event_type]++;
         });
+
+        const n = arr.length;
         mAvgHR.textContent = (sumHR / n).toFixed(1);
         mAvgHRV.textContent = (sumHRV / n).toFixed(1);
-        mCount.textContent = n.toString();
+        mCount.textContent = String(n);
+
+        mEvents.textContent =
+          "N:" + counts.normal +
+          " · H:" + counts.heatwave_risk +
+          " · F:" + counts.flood_risk +
+          " · C:" + counts.conflict_risk +
+          " · I:" + counts.infrastructure_stress;
       }
 
       async function loadDataFromApi() {
