@@ -156,6 +156,7 @@
 
     #controls-card h2,
     #metrics-card h2,
+    #selection-card h2,
     #about-card h2 {
       font-size: 12px;
       text-transform: uppercase;
@@ -266,6 +267,54 @@
     #m-events {
       font-variant-numeric: tabular-nums;
       color: var(--accent);
+    }
+
+    /* Selection card */
+    #selection-card {
+      font-size: 11px;
+    }
+
+    .sel-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .sel-label {
+      color: var(--text-soft);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .sel-value {
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .sel-main {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .phase-pill {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(180, 195, 255, 0.7);
+      font-size: 10px;
+      margin-left: 6px;
+    }
+
+    .phase-day { color:#ffc857; }
+    .phase-night { color:#7fb3ff; }
+    .phase-transition { color:#ff8ddc; }
+
+    .sel-note {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-soft);
     }
 
     /* About / sections */
@@ -417,6 +466,46 @@
       </div>
     </section>
 
+    <!-- NOWA KARTA: AKTUALNY PUNKT / REGION -->
+    <section id="selection-card" class="panel-card">
+      <h2>Aktualny punkt / region (AI lens)</h2>
+      <div id="sel-empty" class="sel-note">
+        Najedź kursorem na dowolny punkt na globusie, aby zobaczyć szczegółowy profil regionu:
+        lokalizacja, typ zdarzenia, faza doby, HR/HRV oraz interpretacja AI (demo).
+      </div>
+      <div id="sel-content" style="display:none;">
+        <div class="sel-main">
+          <span id="sel-region">—</span>
+          <span id="sel-phase-pill" class="phase-pill">—</span>
+        </div>
+
+        <div class="sel-row">
+          <div class="sel-label">Typ zdarzenia</div>
+          <div class="sel-value" id="sel-type">—</div>
+        </div>
+        <div class="sel-row">
+          <div class="sel-label">Współrzędne</div>
+          <div class="sel-value" id="sel-coords">—</div>
+        </div>
+        <div class="sel-row">
+          <div class="sel-label">Lokalny czas</div>
+          <div class="sel-value" id="sel-local-time">—</div>
+        </div>
+        <div class="sel-row">
+          <div class="sel-label">HR / HRV</div>
+          <div class="sel-value" id="sel-hr-hrv">—</div>
+        </div>
+        <div class="sel-row">
+          <div class="sel-label">risk_index</div>
+          <div class="sel-value" id="sel-risk">—</div>
+        </div>
+
+        <div class="sel-note" id="sel-note">
+          —
+        </div>
+      </div>
+    </section>
+
     <section id="about-card" class="panel-card">
       <h2>O projekcie / układ klastrów</h2>
       <div id="about-scroll">
@@ -467,6 +556,18 @@
       const mCount = document.getElementById("m-count");
       const mEvents = document.getElementById("m-events");
 
+      // Selection panel elements
+      const selEmpty = document.getElementById("sel-empty");
+      const selContent = document.getElementById("sel-content");
+      const selRegion = document.getElementById("sel-region");
+      const selPhasePill = document.getElementById("sel-phase-pill");
+      const selType = document.getElementById("sel-type");
+      const selCoords = document.getElementById("sel-coords");
+      const selLocalTime = document.getElementById("sel-local-time");
+      const selHrHrv = document.getElementById("sel-hr-hrv");
+      const selRisk = document.getElementById("sel-risk");
+      const selNote = document.getElementById("sel-note");
+
       let scene, camera, renderer;
       let globeMesh, wireMesh, atmosphereMesh;
       let pointsGroup;
@@ -479,13 +580,12 @@
 
       const radius = 1.2;
 
-      // MOCNE kolory – ekstremalnie kontrastowe
       const colorMap = {
-        normal: new THREE.Color(0x00ffd5),            // turkus
-        heatwave_risk: new THREE.Color(0xff5500),     // pomarańcz
-        flood_risk: new THREE.Color(0x008cff),        // niebieski
-        conflict_risk: new THREE.Color(0xff008a),     // róż/fuksja
-        infrastructure_stress: new THREE.Color(0xffd400), // żółty
+        normal: new THREE.Color(0x00ffd5),
+        heatwave_risk: new THREE.Color(0xff5500),
+        flood_risk: new THREE.Color(0x008cff),
+        conflict_risk: new THREE.Color(0xff008a),
+        infrastructure_stress: new THREE.Color(0xffd400),
       };
 
       function initScene() {
@@ -569,7 +669,7 @@
 
         window.addEventListener("resize", onResize);
         container.addEventListener("mousemove", onMouseMove);
-        container.addEventListener("mouseleave", () => (tooltip.style.opacity = 0));
+        container.addEventListener("mouseleave", onMouseLeave);
         container.addEventListener("mousedown", onMouseDown);
         container.addEventListener("mouseup", onMouseUp);
         container.addEventListener("mouseout", onMouseUp);
@@ -686,6 +786,8 @@
 
             tooltip.innerHTML = html;
             tooltip.style.opacity = 1;
+
+            updateSelectionPanel(d);
           } else {
             tooltip.style.opacity = 0;
           }
@@ -718,6 +820,10 @@
 
       function onMouseUp() {
         isDragging = false;
+      }
+
+      function onMouseLeave() {
+        tooltip.style.opacity = 0;
       }
 
       function animate() {
@@ -787,6 +893,49 @@
           " · F:" + counts.flood_risk +
           " · C:" + counts.conflict_risk +
           " · I:" + counts.infrastructure_stress;
+      }
+
+      // --- PANEL SELECTION: faza doby + interpretacja ---
+      function phaseFromLocalHour(h) {
+        if (h >= 7 && h < 19) return "day";
+        if ((h >= 19 && h <= 24) || (h >= 0 && h < 5)) return "night";
+        return "transition";
+      }
+
+      function phaseLabel(phase) {
+        if (phase === "day") return "faza doby: dzień";
+        if (phase === "night") return "faza doby: noc";
+        return "faza doby: przejście (świt/zmierzch)";
+      }
+
+      function updateSelectionPanel(d) {
+        if (!d) {
+          selEmpty.style.display = "block";
+          selContent.style.display = "none";
+          return;
+        }
+
+        selEmpty.style.display = "none";
+        selContent.style.display = "block";
+
+        selRegion.textContent = d.region_label || "Nieznany region";
+
+        const phase = phaseFromLocalHour(d.local_hour);
+        selPhasePill.textContent = phaseLabel(phase);
+        selPhasePill.classList.remove("phase-day", "phase-night", "phase-transition");
+        if (phase === "day") selPhasePill.classList.add("phase-day");
+        else if (phase === "night") selPhasePill.classList.add("phase-night");
+        else selPhasePill.classList.add("phase-transition");
+
+        selType.textContent = d.event_type;
+        selCoords.textContent = d.lat.toFixed(2) + "° / " + d.lon.toFixed(2) + "°";
+        selLocalTime.textContent = d.local_hour.toFixed(1) + " h";
+
+        selHrHrv.textContent = d.HR.toFixed(1) + " bpm / " + d.HRV.toFixed(1);
+
+        selRisk.textContent = d.risk_index.toFixed(2);
+
+        selNote.textContent = d.reason || "Brak dodatkowego komentarza (demo).";
       }
 
       // --- DEMO DATA: wyraźne, kolorowe klastry + region_label + reason ---
